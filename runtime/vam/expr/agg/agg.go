@@ -33,13 +33,17 @@ func NewPattern(op string, distinct, hasarg bool) (Pattern, error) {
 		pattern = func() Func {
 			return &avg{}
 		}
+	case "blend":
+		pattern = func() Func {
+			return newFuse(false)
+		}
 	case "dcount":
 		pattern = func() Func {
 			return newDCount()
 		}
 	case "fuse":
 		pattern = func() Func {
-			return newFuse()
+			return newFuse(true)
 		}
 	case "sum":
 		pattern = func() Func {

@@ -600,6 +600,9 @@ RenameOp
 
 FuseOp
   = FUSE &EndOfOp {
+      return &ast.FuseOp{Kind: "FuseOp", Complete: true, Loc: loc(c)}, nil
+    }
+  / BLEND &EndOfOp {
       return &ast.FuseOp{Kind: "FuseOp", Loc: loc(c)}, nil
     }
 
@@ -1463,6 +1466,13 @@ EasyType
       return &ast.TypeEnum{
           Kind: "TypeEnum",
           Symbols: sliceOf[*ast.Text](names),
+          Loc: loc(c),
+      }, nil
+    }
+  / FUSION __ "(" __ t:Type __ ")" {
+      return &ast.TypeFusion{
+          Kind: "TypeFusion",
+          Type: t.(ast.Type),
           Loc: loc(c),
       }, nil
     }
@@ -2440,6 +2450,7 @@ ASC        = "ASC"i             !IdentifierRest { return "asc", nil }
 ASSERT     = "ASSERT"i          !IdentifierRest
 AT         = "AT"i              !IdentifierRest
 BETWEEN    = "BETWEEN"i         !IdentifierRest
+BLEND      = "BLEND"i           !IdentifierRest
 BY         = "BY"i              !IdentifierRest
 CALL       = "CALL"i            !IdentifierRest
 CASE       = "CASE"i            !IdentifierRest
@@ -2469,6 +2480,7 @@ FORK       = "FORK"i            !IdentifierRest
 FROM       = "FROM"i            !IdentifierRest
 FULL       = "FULL"i            !IdentifierRest
 FUSE       = "FUSE"i            !IdentifierRest
+FUSION     = "FUSION"i          !IdentifierRest
 GROUP      = "GROUP"i           !IdentifierRest
 HAVING     = "HAVING"i          !IdentifierRest
 HEAD       = "HEAD"i            !IdentifierRest

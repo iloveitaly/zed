@@ -1,16 +1,31 @@
 package function
 
 import (
+	"slices"
+
 	"github.com/brimdata/super"
 	"github.com/brimdata/super/scode"
 )
 
 type defuse struct {
-	sctx *super.Context
+	sctx     *super.Context
+	downcast *downcast
+	has      map[super.Type]bool
 }
 
 func NewDefuse(sctx *super.Context) *defuse {
-	return &defuse{sctx}
+	_, d := newDowncastDefuser(sctx)
+	return d
+}
+
+func newDowncastDefuser(sctx *super.Context) (*downcast, *defuse) {
+	d := &defuse{
+		sctx:     sctx,
+		downcast: &downcast{sctx: sctx},
+		has:      make(map[super.Type]bool),
+	}
+	d.downcast.defuser = d
+	return d.downcast, d
 }
 
 func (d *defuse) Call(args []super.Value) super.Value {
@@ -18,24 +33,29 @@ func (d *defuse) Call(args []super.Value) super.Value {
 }
 
 func (d *defuse) eval(in super.Value) super.Value {
+	if !d.hasFusion(in.Type()) {
+		return in
+	}
 	switch typ := in.Type().(type) {
 	case *super.TypeRecord:
 		var fields []super.Field
-		var elems []super.Value
+		var b scode.Builder
+		var optOff int
+		var nones []int
+		b.BeginContainer()
 		it := scode.NewRecordIter(in.Bytes(), typ.Opts)
 		for _, f := range typ.Fields {
 			bytes, none := it.Next(f.Opt)
 			if none {
+				nones = append(nones, optOff)
+				optOff++
 				continue
 			}
 			val := d.eval(super.NewValue(f.Type, bytes))
-			elems = append(elems, val)
+			b.Append(val.Bytes())
 			fields = append(fields, super.NewField(f.Name, val.Type()))
 		}
-		var b scode.Builder
-		for _, e := range elems {
-			b.Append(e.Bytes())
-		}
+		b.EndContainerWithNones(typ.Opts, nones)
 		return super.NewValue(d.sctx.MustLookupTypeRecord(fields), b.Bytes())
 	case *super.TypeArray:
 		elems := d.parseArrayOrSet(typ.Type, in.Bytes())
@@ -78,6 +98,12 @@ func (d *defuse) eval(in super.Value) super.Value {
 		return super.NewValue(d.sctx.LookupTypeMap(keyType, valType), b.Bytes())
 	case *super.TypeUnion:
 		return d.eval(in.Deunion())
+	case *super.TypeFusion:
+		_, subType := typ.Deref(d.sctx, in.Bytes())
+		if out, ok := d.downcast.Cast(in, subType); ok {
+			return out
+		}
+		return d.sctx.WrapError("cannot defuse super value", in)
 	default:
 		// primitives, named types, enums
 		// BTW, named types are a barrier to defuse.
@@ -130,10 +156,33 @@ func (d *defuse) unifyType(vals []super.Value) super.Type {
 	}
 	switch len(types) {
 	case 0:
-		return super.TypeNull // XXX should be TypeEmpty
+		return super.TypeNull // XXX should be TypeNone
 	case 1:
 		return types[0]
 	default:
 		return d.sctx.LookupTypeUnion(types)
 	}
+}
+
+func (d *defuse) hasFusion(typ super.Type) bool {
+	if fused, ok := d.has[typ]; ok {
+		return fused
+	}
+	var has bool
+	switch typ := typ.(type) {
+	case *super.TypeRecord:
+		has = slices.ContainsFunc(typ.Fields, func(f super.Field) bool { return d.hasFusion(f.Type) })
+	case *super.TypeArray:
+		has = d.hasFusion(typ.Type)
+	case *super.TypeSet:
+		has = d.hasFusion(typ.Type)
+	case *super.TypeMap:
+		has = d.hasFusion(typ.KeyType) || d.hasFusion(typ.ValType)
+	case *super.TypeError:
+		has = d.hasFusion(typ.Type)
+	case *super.TypeFusion:
+		has = true
+	}
+	d.has[typ] = has
+	return has
 }
