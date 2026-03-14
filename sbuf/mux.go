@@ -2,7 +2,6 @@ package sbuf
 
 import (
 	"github.com/brimdata/super"
-	"github.com/brimdata/super/sio"
 )
 
 func Label(label string, batch Batch) Batch {
@@ -33,25 +32,3 @@ var _ Batch = (*EndOfChannel)(nil)
 func (*EndOfChannel) Ref()                  {}
 func (*EndOfChannel) Unref()                {}
 func (*EndOfChannel) Values() []super.Value { return nil }
-
-func CopyMux(outputs map[string]sio.WriteCloser, parent Puller) error {
-	for {
-		batch, err := parent.Pull(false)
-		if batch == nil || err != nil {
-			return err
-		}
-		if _, ok := batch.(*EndOfChannel); ok {
-			continue
-		}
-		var label string
-		batch, label = Unlabel(batch)
-		if w, ok := outputs[label]; ok {
-			if err := WriteBatch(w, batch); err != nil {
-				return err
-			}
-		}
-		// XXX Should we send some kind of warning if a batch is ignored
-		// because it doesn't have an assigned output channel?
-		batch.Unref()
-	}
-}
