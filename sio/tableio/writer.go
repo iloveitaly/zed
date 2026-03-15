@@ -9,8 +9,10 @@ import (
 
 	"github.com/brimdata/super"
 	"github.com/brimdata/super/runtime/sam/expr"
+	"github.com/brimdata/super/sbuf"
 	"github.com/brimdata/super/sio/zeekio"
 	"github.com/brimdata/super/sup"
+	"github.com/brimdata/super/vector"
 )
 
 type Writer struct {
@@ -30,6 +32,10 @@ func NewWriter(w io.WriteCloser) *Writer {
 		table:     table,
 		limit:     1000,
 	}
+}
+
+func (w *Writer) Push(vec vector.Any) error {
+	return sbuf.WriteVec(w, vec)
 }
 
 func (w *Writer) Write(r super.Value) error {

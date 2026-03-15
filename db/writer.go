@@ -73,6 +73,10 @@ func (w *Writer) newObject() *data.Object {
 	return &w.objects[len(w.objects)-1]
 }
 
+func (w *Writer) Push(vec vector.Any) error {
+	return sbuf.WriteVec(w, vec)
+}
+
 func (w *Writer) Write(rec super.Value) error {
 	if w.ctx.Err() != nil {
 		if err := w.errgroup.Wait(); err != nil {

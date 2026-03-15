@@ -19,8 +19,10 @@ import (
 	"github.com/apache/arrow-go/v18/arrow/memory"
 	"github.com/brimdata/super"
 	"github.com/brimdata/super/pkg/nano"
+	"github.com/brimdata/super/sbuf"
 	"github.com/brimdata/super/scode"
 	"github.com/brimdata/super/sup"
+	"github.com/brimdata/super/vector"
 )
 
 var (
@@ -56,6 +58,10 @@ func NewWriter(w io.WriteCloser) *Writer {
 		w:                w,
 		unionTagMappings: map[super.Type][]int{},
 	}
+}
+
+func (w *Writer) Push(vec vector.Any) error {
+	return sbuf.WriteVec(w, vec)
 }
 
 func (w *Writer) Close() error {

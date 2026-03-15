@@ -16,7 +16,9 @@ import (
 	"github.com/brimdata/super/pkg/terminal/color"
 	"github.com/brimdata/super/pkg/units"
 	"github.com/brimdata/super/runtime/sam/op/meta"
+	"github.com/brimdata/super/sbuf"
 	"github.com/brimdata/super/sup"
+	"github.com/brimdata/super/vector"
 	"github.com/segmentio/ksuid"
 )
 
@@ -52,6 +54,10 @@ func NewWriter(w io.WriteCloser, opts WriterOpts) *Writer {
 		writer.headName = opts.Head
 	}
 	return writer
+}
+
+func (w *Writer) Push(vec vector.Any) error {
+	return sbuf.WriteVec(w, vec)
 }
 
 func (w *Writer) Write(rec super.Value) error {

@@ -5,7 +5,9 @@ import (
 	"io"
 
 	"github.com/brimdata/super"
+	"github.com/brimdata/super/sbuf"
 	"github.com/brimdata/super/sio"
+	"github.com/brimdata/super/vector"
 )
 
 type ArrayWriter struct {
@@ -33,6 +35,10 @@ func (a *ArrayWriter) Close() error {
 		return err
 	}
 	return a.wc.Close()
+}
+
+func (a *ArrayWriter) Push(vec vector.Any) error {
+	return sbuf.WriteVec(a, vec)
 }
 
 func (a *ArrayWriter) Write(val super.Value) error {

@@ -83,3 +83,34 @@ func (p *Progress) Copy() Progress {
 func (p *Progress) Progress() Progress {
 	return p.Copy()
 }
+
+func Copy(dst Pusher, src Puller) error {
+	for {
+		vec, err := src.Pull(false)
+		if err != nil || vec == nil {
+			return err
+		}
+		if err := dst.Push(vec); err != nil {
+			return err
+		}
+	}
+}
+
+func CopyMux(outputs map[string]Pusher, parent Puller) error {
+	for {
+		vec, err := parent.Pull(false)
+		if vec == nil || err != nil {
+			return err
+		}
+		var label string
+		vec, label = vector.Unlabel(vec)
+		if vec == nil {
+			continue
+		}
+		if w, ok := outputs[label]; ok {
+			if err := w.Push(vec); err != nil {
+				return err
+			}
+		}
+	}
+}
