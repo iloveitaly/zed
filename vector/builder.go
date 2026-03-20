@@ -263,24 +263,31 @@ func (u *unionBuilder) Build(sctx *super.Context) Any {
 }
 
 type fusionBuilder struct {
-	typ    *super.TypeFusion
-	values Builder
-	//XXX this will change
-	subTypes Builder
+	typ      *super.TypeFusion
+	values   Builder
+	subtypes []scode.Bytes
 }
 
 func newFusionBuilder(typ *super.TypeFusion) Builder {
-	return &fusionBuilder{typ: typ, values: NewBuilder(typ.Type), subTypes: newBytesStringTypeBuilder(super.TypeType)}
+	return &fusionBuilder{typ: typ, values: NewBuilder(typ.Type)}
 }
 
 func (f *fusionBuilder) Write(bytes scode.Bytes) {
 	it := bytes.Iter()
 	f.values.Write(it.Next())
-	f.subTypes.Write(it.Next())
+	f.subtypes = append(f.subtypes, it.Next())
 }
 
 func (f *fusionBuilder) Build(sctx *super.Context) Any {
-	return NewFusion(f.typ, f.values.Build(sctx), f.subTypes.Build(sctx).(*TypeValue))
+	types := make([]super.Type, 0, len(f.subtypes))
+	for _, tv := range f.subtypes {
+		t, err := sctx.LookupByValue(tv)
+		if err != nil {
+			panic(err)
+		}
+		types = append(types, t)
+	}
+	return NewFusion(sctx, f.typ, f.values.Build(sctx), types)
 }
 
 type enumBuilder struct {
