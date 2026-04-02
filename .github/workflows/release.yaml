@@ -20,6 +20,19 @@ jobs:
     - run: make test-unit
     - run: make test-system
     - run: make test-heavy
+    - name: Install SSL.com CodeSignTool
+      run: |
+        curl -o /tmp/codesigntool.zip https://www.ssl.com/download/codesigntool-for-linux-and-macos/
+        unzip /tmp/codesigntool.zip -d /tmp/codesigntool
+        cat > /usr/local/bin/CodeSignTool << 'EOF'
+        #!/bin/sh
+        CODE_SIGN_TOOL_PATH=/tmp/codesigntool bash /tmp/codesigntool/CodeSignTool.sh "$@"
+        EOF
+        chmod +x /usr/local/bin/CodeSignTool
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
     - uses: goreleaser/goreleaser-action@v6
       with:
         args: release --clean
@@ -30,3 +43,7 @@ jobs:
         MACOS_NOTARY_ISSUER_ID: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
         MACOS_NOTARY_KEY_ID: ${{ secrets.MACOS_NOTARY_KEY_ID }}
         MACOS_NOTARY_KEY: ${{ secrets.MACOS_NOTARY_KEY }}
+        SSLDOTCOM_USERNAME: ${{ secrets.SSLDOTCOM_USERNAME }}
+        SSLDOTCOM_PASSWORD: ${{ secrets.SSLDOTCOM_PASSWORD }}
+        SSLDOTCOM_CREDENTIAL_ID: ${{ secrets.SSLDOTCOM_CREDENTIAL_ID }}
+        SSLDOTCOM_TOTP_SECRET: ${{ secrets.SSLDOTCOM_TOTP_SECRET }}
