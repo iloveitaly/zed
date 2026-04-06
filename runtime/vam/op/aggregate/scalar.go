@@ -58,7 +58,11 @@ func (s *scalarAggregate) Pull(done bool) (vector.Any, error) {
 			}
 		} else {
 			for _, e := range s.aggs {
-				vals = append(vals, e.Eval(vec))
+				v := e.Eval(vec)
+				if e.Name == "fuse" {
+					v = &vector.NoRip{Any: v}
+				}
+				vals = append(vals, v)
 			}
 		}
 		vector.Apply(true, s.consume, vals...)
