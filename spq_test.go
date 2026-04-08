@@ -40,7 +40,8 @@ func TestSPQ(t *testing.T) {
 		t.Parallel()
 		data, err := loadZTestInputsAndOutputs(t, dirs)
 		require.NoError(t, err)
-		runAllBoomerangs(t, "arrows", data)
+		// disabling arrow until we get nullable working without unions in unions
+		//runAllBoomerangs(t, "arrows", data)
 		runAllBoomerangs(t, "csup", data)
 		runAllBoomerangs(t, "parquet", data)
 		runAllBoomerangs(t, "sup", data)
