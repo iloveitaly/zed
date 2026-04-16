@@ -152,7 +152,8 @@ func NewBuilder(typ super.Type) Builder {
 		return &errorBuilder{vals: NewBuilder(typ.Type)}
 	case *super.TypeNamed:
 		return &namedBuilder{name: typ.Name, vals: NewBuilder(typ.Type)}
-
+	case *super.TypeFusion:
+		return &fusionBuilder{vals: NewBuilder(typ.Type)}
 	default:
 		panic(typ)
 	}
@@ -412,6 +413,24 @@ func (n *namedBuilder) Build(sctx *super.Context) Any {
 		panic(err)
 	}
 	return NewNamed(typ, vals)
+}
+
+type fusionBuilder struct {
+	typ      *super.TypeFusion
+	vals     Builder
+	subtypes []super.Type
+}
+
+func (f *fusionBuilder) Write(vec Any) {
+	fusion := vec.(*Fusion)
+	f.typ = fusion.Typ
+	f.vals.Write(fusion.Values)
+	f.subtypes = append(f.subtypes, fusion.Subtypes.Types()...)
+}
+
+func (f *fusionBuilder) Build(sctx *super.Context) Any {
+	vals := f.vals.Build(sctx)
+	return NewFusion(sctx, f.typ, vals, f.subtypes)
 }
 
 type mapBuilder struct {
