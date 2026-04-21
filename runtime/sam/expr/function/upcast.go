@@ -216,9 +216,14 @@ func UpcastUnionTag(types []super.Type, out super.Type) int {
 	k := out.Kind()
 	if k == super.PrimitiveKind {
 		id := out.ID()
-		return slices.IndexFunc(types, func(t super.Type) bool { return t.ID() == id })
+		return slices.IndexFunc(types, func(t super.Type) bool { return !isNamed(t) && t.ID() == id })
 	}
-	return slices.IndexFunc(types, func(t super.Type) bool { return t.Kind() == k })
+	return slices.IndexFunc(types, func(t super.Type) bool { return !isNamed(t) && t.Kind() == k })
+}
+
+func isNamed(t super.Type) bool {
+	_, ok := t.(*super.TypeNamed)
+	return ok
 }
 
 func (u *Upcast) toError(b *scode.Builder, typ super.Type, bytes scode.Bytes, to *super.TypeError) bool {
