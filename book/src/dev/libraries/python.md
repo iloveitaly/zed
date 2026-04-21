@@ -1,5 +1,7 @@
 # Python
 
+**TBD: UPDATE THIS PAGE**
+
 SuperDB includes preliminary support for Python-based interaction
 with a SuperDB database.
 
@@ -16,7 +18,7 @@ with a SuperDB database.
 > implementation of [CSUP](../../formats/csup.md).  Stay tuned.
 
 The Python package supports loading data into a database as well as
-querying and retrieving results in the [JSUP format](../../formats/jsup.md).
+querying and retrieving results in a TBD format.
 The Python client interacts with the database via the REST API served by
 [`super db serve`](../../command/db.md#super-db-serve).
 
@@ -54,8 +56,8 @@ client = superdb.Client()
 client.create_pool('TestPool')
 
 # Load some SUP records from a string.  A file-like object also works.
-# Data format is detected automatically and can be BSUP, CSV, JSON, SUP,
-# Zeek TSV, or JSUP.
+# Data format is detected automatically and can be BSUP, CSV, JSON, SUP, or
+# Zeek TSV.
 client.load('TestPool', '{s:"hello"} {s:"world"}')
 
 # Begin executing a SuperDB query for all values in TestPool.
