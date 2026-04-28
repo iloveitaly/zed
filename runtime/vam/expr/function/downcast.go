@@ -101,6 +101,8 @@ func (d *downcast) downcast(vec vector.Any, to super.Type) vector.Any {
 		return d.toMap(vec, to)
 	case *super.TypeUnion:
 		return d.toUnion(vec, to)
+	case *super.TypeEnum:
+		return d.toEnum(vec, to)
 	case *super.TypeError:
 		return d.toError(vec, to)
 	case *super.TypeNamed:
@@ -381,6 +383,37 @@ func (d *downcast) toUnion(vec vector.Any, to *super.TypeUnion) vector.Any {
 		}
 		return vector.NewUnion(to, make([]uint32, vec.Len()), []vector.Any{vec})
 	})
+}
+
+func (d *downcast) toEnum(vec vector.Any, to *super.TypeEnum) vector.Any {
+	origVec := vec
+	var index []uint32
+	if view, ok := vec.(*vector.View); ok {
+		vec = view.Any
+		index = view.Index
+	}
+	enumVec, ok := vec.(*vector.Enum)
+	if !ok {
+		return d.errMismatch(origVec, to)
+	}
+	indexes := make([]uint64, origVec.Len())
+	for i := range indexes {
+		j := uint32(i)
+		if index != nil {
+			j = index[j]
+		}
+		fromIndex := enumVec.Uint.Values[j]
+		symbol, err := enumVec.Typ.Symbol(int(fromIndex))
+		if err != nil {
+			return d.errMismatch(origVec, to)
+		}
+		toIndex := to.Lookup(symbol)
+		if toIndex < 0 {
+			return d.errMismatch(origVec, to)
+		}
+		indexes[i] = uint64(toIndex)
+	}
+	return vector.NewEnum(to, indexes)
 }
 
 func (d *downcast) toError(vec vector.Any, to *super.TypeError) vector.Any {
