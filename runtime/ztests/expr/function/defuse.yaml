@@ -177,3 +177,15 @@ input: &input |
   {}
 
 output: *input
+
+---
+
+spq: fuse | defuse(this)
+
+vector: true
+
+input: &input |
+  error(0)
+  error(1)::(null|error(int64))
+
+output: *input
