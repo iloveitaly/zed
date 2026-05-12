@@ -427,6 +427,16 @@ type fusionBuilder struct {
 }
 
 func (f *fusionBuilder) Write(vec Any) {
+	if view, ok := vec.(*View); ok {
+		fusion := view.Any.(*Fusion)
+		f.typ = fusion.Typ
+		f.vals.Write(Pick(fusion.Values, view.Index))
+		types := fusion.Subtypes.Types()
+		for _, slot := range view.Index {
+			f.subtypes = append(f.subtypes, types[slot])
+		}
+		return
+	}
 	fusion := vec.(*Fusion)
 	f.typ = fusion.Typ
 	f.vals.Write(fusion.Values)
