@@ -339,6 +339,11 @@ func BuildFusion(b *scode.Builder, superVal scode.Bytes, subType scode.Bytes) {
 	b.EndContainer()
 }
 
+func IsTypeAny(typ Type) bool {
+	fusion, ok := TypeUnder(typ).(*TypeFusion)
+	return ok && fusion.Type == TypeAll
+}
+
 type TypeUnion struct {
 	id    int
 	Types []Type
