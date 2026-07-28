@@ -102,10 +102,13 @@ spq: defuse(this)
 input: |
   fusion({a?:1,b?:_::int64,c?:_::int64},<{a:int64}>)
   fusion({a?:_::int64,b?:1,c?:2},<{b:int64,c:int64}>)
+  // None-valued record fields.
+  [{a:fusion(_::(int64|none),<none>)},{a:fusion(_::(string|none),<none>)}]
 
 output: |
   {a:1}
   {b:1,c:2}
+  [{},{}]
 
 ---
 
