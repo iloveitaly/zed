@@ -11,8 +11,13 @@ collect(any) -> [any]
 ## Description
 
 The _collect_ aggregate function organizes its input into an array.
-If the input values vary in type, the return type will be an array
-of union of the types encountered.
+If the aggregated values vary in type, the return type will be an array
+of union of the types encountered.  If no values are aggregated, the
+return value is an empty array.
+
+>[!NOTE]
+>See [array_agg](array_agg.md) for a variant that returns `null` when no values
+>are aggregated, following the SQL standard.
 
 ## Examples
 
@@ -56,4 +61,21 @@ collect(a) by k | sort
 # expected output
 {k:1,collect:[1,2]}
 {k:2,collect:[3,4]}
+```
+
+Contrast `collect` with `array_agg` when no values have been aggregated:
+```mdtest-spq
+# spq
+aggregate
+  collect(a) filter (a > 1),
+  array_agg(a) filter (a > 1)
+  by k
+| sort
+# input
+{a:1,k:1}
+{a:2,k:2}
+{a:3,k:2}
+# expected output
+{k:1,collect:[],array_agg:null}
+{k:2,collect:[2,3],array_agg:[2,3]}
 ```
