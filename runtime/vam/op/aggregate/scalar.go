@@ -66,10 +66,6 @@ func (s *scalarAggregate) Pull(done bool) (vector.Any, error) {
 
 func (s *scalarAggregate) consume(vecs ...vector.Any) vector.Any {
 	for i, vec := range vecs {
-		vec, ok := removeQuiet(vec)
-		if !ok {
-			continue
-		}
 		if s.partialsIn {
 			s.funcs[i].ConsumeAsPartial(vec)
 		} else {
